@@ -1,8 +1,8 @@
 /******************************************************************************\
 
 file:   Withdrawable.sol
-ver:    0.1.1
-updated:26-Jul-2017
+ver:    0.1.2
+updated:27-Jul-2017
 author: Darryl Morris (o0ragman0o)
 email:  o0ragman0o AT gmail.com
 
@@ -17,17 +17,14 @@ See MIT Licence for further details.
 
 Change Log
 ----------
-* added `bool public acceptingDeposits`
-* added `modifier isAcceptingDeposits()`
-* added `function acceptDeposits(bool) returns (bool)`
-* added `event AcceptingDeposits(bool indexed _accept)`
+* changed from `Interface` to `Abstract` naming convention.
 
 \******************************************************************************/
 
-pragma solidity ^0.4.10;
+pragma solidity ^0.4.11;
 
 
-contract WithdrawableInterface
+contract WithdrawableAbstract
 {
 //
 // State
@@ -51,12 +48,19 @@ contract WithdrawableInterface
     
     // Trigger when a call to withdrawl from an external contract
     event WithdrawnFrom(address indexed _from, uint _value);
-    
+
+//
+// Modifiers
+//    
     modifier isAcceptingDeposits() {
         require(acceptingDeposits);
         _;
     }
     
+//
+// Function Abstracts
+//
+
     /// @param _addr An ethereum address
     /// @return The balance of ether held in the contract for `_addr`
     function etherBalanceOf(address _addr) constant returns (uint);
@@ -87,7 +91,7 @@ contract WithdrawableInterface
 
 
 // Example implimentation
-contract Withdrawable is WithdrawableInterface
+contract Withdrawable is WithdrawableAbstract
 {
     // Withdrawable contracts should have an owner
     address public owner;
