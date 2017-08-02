@@ -1,8 +1,8 @@
 /******************************************************************************\
 
 file:   Withdrawable.sol
-ver:    0.1.2
-updated:27-Jul-2017
+ver:    0.2.0
+updated:2-Aug-2017
 author: Darryl Morris (o0ragman0o)
 email:  o0ragman0o AT gmail.com
 
@@ -17,11 +17,13 @@ See MIT Licence for further details.
 
 Change Log
 ----------
-* changed from `Interface` to `Abstract` naming convention.
+* Added `withdrawTo(address _to, uint _value)`
+* Change `_addr` parameters to semantic names `_to`, `_for`, `_from`
+* Move events above transfers.
 
 \******************************************************************************/
 
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 
 contract WithdrawableAbstract
@@ -30,7 +32,7 @@ contract WithdrawableAbstract
 // State
 //
 
-    // Accept/decline payments switch state.
+    // Accept/decline payments switch state. Blocking by default
     bool public acceptingDeposits;
 
 //
@@ -70,18 +72,25 @@ contract WithdrawableAbstract
     /// @return success
     function withdraw(uint _value) returns (bool);
     
-    /// @notice withdraw `_value` from account `_addr`
-    /// @param _addr a holder address in the contract
+    /// @notice Withdraw `_value` from account `msg.sender` and send `_value` to
+    /// address `_to`
+    /// @param _to a recipient address
     /// @param _value the value to withdraw
     /// @return success
-    function withdrawFor(address _addr, uint _value) returns (bool);
+    function withdrawTo(address _to, uint _value) returns (bool);
     
-    /// @notice Withdraw `_value` from external contract at `_addr` to this
-    /// this contract
-    /// @param _addr a holder address in the contract
+    /// @notice withdraw `_value` from account `_for`
+    /// @param _for a holder address in the contract
     /// @param _value the value to withdraw
     /// @return success
-    function withdrawFrom(address _addr, uint _value) returns (bool);
+    function withdrawFor(address _for, uint _value) returns (bool);
+    
+    /// @notice Withdraw `_value` from external contract at `_from` to this
+    /// this contract
+    /// @param _from a holder address in the contract
+    /// @param _value the value to withdraw
+    /// @return success
+    function withdrawFrom(address _from, uint _value) returns (bool);
     
     /// @notice Change the deposit acceptance state to `_accept`
     /// @param _accept Boolean acceptance state to change to
@@ -134,19 +143,30 @@ contract Withdrawable is WithdrawableAbstract
         returns (bool)
     {
         require(etherBalanceOf(msg.sender) >= _value);
+        Withdrawal(msg.sender, _value);
         msg.sender.transfer(_value);
-        Withdrawal(owner, _value);
+        return true;
+    }
+    
+    // Withdraw a value of ether sending it to the specified address
+    function withdrawTo(address _to, uint _value)
+        public
+        returns (bool)
+    {
+        require(etherBalanceOf(msg.sender) >= _value);
+        Withdrawal(msg.sender, _value);
+        _to.transfer(_value);
         return true;
     }
     
     // Push a payment to an address of which has awarded ether
-    function withdrawFor(address _to, uint _value)
+    function withdrawFor(address _for, uint _value)
         public
         returns (bool)
     {
         require (msg.sender == owner);
-        _to.transfer(_value);
-        Withdrawal(_to, _value);
+        Withdrawal(_for, _value);
+        _for.transfer(_value);
         return true;
     }
     
@@ -157,6 +177,6 @@ contract Withdrawable is WithdrawableAbstract
         returns (bool)
     {
         WithdrawnFrom(_from, _value);
-        return Withdrawable(_from).withdraw(_value);
+        return WithdrawableAbstract(_from).withdraw(_value);
     }
 }
