@@ -1,8 +1,8 @@
 /******************************************************************************\
 
 file:   Withdrawable.sol
-ver:    0.2.0
-updated:2-Aug-2017
+ver:    0.3.0
+updated:22-Aug-2017
 author: Darryl Morris (o0ragman0o)
 email:  o0ragman0o AT gmail.com
 
@@ -17,9 +17,9 @@ See MIT Licence for further details.
 
 Change Log
 ----------
-* Added `withdrawTo(address _to, uint _value)`
-* Change `_addr` parameters to semantic names `_to`, `_for`, `_from`
-* Move events above transfers.
+* Breaking.
+* Removed `event WithdrawnFrom()` in preference for existing Deposit() event
+* `event Withdawn(to, value)` changed to `event Withdrawn(from, to, value)`
 
 \******************************************************************************/
 
@@ -46,11 +46,8 @@ contract WithdrawableAbstract
     event Deposit(address indexed _from, uint _value);
     
     // Triggered upon a withdrawal
-    event Withdrawal(address indexed _to, uint _value);
+    event Withdrawal(address indexed _from, address indexed _to, uint _value);
     
-    // Trigger when a call to withdrawl from an external contract
-    event WithdrawnFrom(address indexed _from, uint _value);
-
 //
 // Modifiers
 //    
@@ -143,7 +140,7 @@ contract Withdrawable is WithdrawableAbstract
         returns (bool)
     {
         require(etherBalanceOf(msg.sender) >= _value);
-        Withdrawal(msg.sender, _value);
+        Withdrawal(msg.sender, msg.sender, _value);
         msg.sender.transfer(_value);
         return true;
     }
@@ -154,7 +151,7 @@ contract Withdrawable is WithdrawableAbstract
         returns (bool)
     {
         require(etherBalanceOf(msg.sender) >= _value);
-        Withdrawal(msg.sender, _value);
+        Withdrawal(msg.sender, _to, _value);
         _to.transfer(_value);
         return true;
     }
@@ -164,8 +161,8 @@ contract Withdrawable is WithdrawableAbstract
         public
         returns (bool)
     {
-        require (msg.sender == owner);
-        Withdrawal(_for, _value);
+        require(etherBalanceOf(_for) >= _value);
+        Withdrawal(_for, _for, _value);
         _for.transfer(_value);
         return true;
     }
@@ -176,7 +173,7 @@ contract Withdrawable is WithdrawableAbstract
         public
         returns (bool)
     {
-        WithdrawnFrom(_from, _value);
+        Deposit(_from, _value);
         return WithdrawableAbstract(_from).withdraw(_value);
     }
 }
