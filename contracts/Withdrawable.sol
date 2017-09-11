@@ -1,8 +1,8 @@
 /******************************************************************************\
 
 file:   Withdrawable.sol
-ver:    0.3.0
-updated:22-Aug-2017
+ver:    0.3.1
+updated:11-Sep-2017
 author: Darryl Morris (o0ragman0o)
 email:  o0ragman0o AT gmail.com
 
@@ -17,13 +17,73 @@ See MIT Licence for further details.
 
 Change Log
 ----------
-* Breaking.
-* Removed `event WithdrawnFrom()` in preference for existing Deposit() event
-* `event Withdawn(to, value)` changed to `event Withdrawn(from, to, value)`
+* Added `withdrawAll() returns (bool);`
+* Added `interface WithdrawableItfc`
 
 \******************************************************************************/
 
 pragma solidity ^0.4.13;
+
+interface WitherableItfc
+{
+//
+// Events
+//
+
+    // Triggered upon change to deposit acceptance state
+    event AcceptingDeposits(bool indexed _accept);
+    
+    // Triggered upon receiving a deposit
+    event Deposit(address indexed _from, uint _value);
+    
+    // Triggered upon a withdrawal
+    event Withdrawal(address indexed _from, address indexed _to, uint _value);
+    
+//
+// Function Abstracts
+//
+
+    /// @return Returns whether deposits are accepted
+    function acceptingDeposits() public constant returns (bool);
+
+    /// @param _addr An ethereum address
+    /// @return The balance of ether held in the contract for `_addr`
+    function etherBalanceOf(address _addr) constant returns (uint);
+    
+    /// @notice withdraw `_value` from account `msg.sender`
+    /// @param _value the value to withdraw
+    /// @return success
+    function withdraw(uint _value) returns (bool);
+    
+    /// @notice withdraw total balance from account `msg.sender`
+    /// @return success
+    function withdrawAll() returns (bool);
+    
+    /// @notice Withdraw `_value` from account `msg.sender` and send `_value` to
+    /// address `_to`
+    /// @param _to a recipient address
+    /// @param _value the value to withdraw
+    /// @return success
+    function withdrawTo(address _to, uint _value) returns (bool);
+    
+    /// @notice withdraw `_value` from account `_for`
+    /// @param _for a holder address in the contract
+    /// @param _value the value to withdraw
+    /// @return success
+    function withdrawFor(address _for, uint _value) returns (bool);
+    
+    /// @notice Withdraw `_value` from external contract at `_from` to this
+    /// this contract
+    /// @param _from a holder address in the contract
+    /// @param _value the value to withdraw
+    /// @return success
+    function withdrawFrom(address _from, uint _value) returns (bool);
+    
+    /// @notice Change the deposit acceptance state to `_accept`
+    /// @param _accept Boolean acceptance state to change to
+    /// @return State change success
+    function acceptDeposits(bool _accept) public returns (bool);
+}
 
 
 contract WithdrawableAbstract
@@ -68,6 +128,10 @@ contract WithdrawableAbstract
     /// @param _value the value to withdraw
     /// @return success
     function withdraw(uint _value) returns (bool);
+    
+    /// @notice withdraw total balance from account `msg.sender`
+    /// @return success
+    function withdrawAll() returns (bool);
     
     /// @notice Withdraw `_value` from account `msg.sender` and send `_value` to
     /// address `_to`
@@ -143,6 +207,14 @@ contract Withdrawable is WithdrawableAbstract
         Withdrawal(msg.sender, msg.sender, _value);
         msg.sender.transfer(_value);
         return true;
+    }
+    
+    // Withdraw entire ether balance from caller's account to caller's address
+    function withdrawAll()
+        public
+        returns (bool)
+    {
+        return withdraw(etherBalanceOf(msg.sender));
     }
     
     // Withdraw a value of ether sending it to the specified address
