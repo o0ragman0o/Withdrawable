@@ -19,7 +19,7 @@ contract to contract transfers and clearing house operations simpler.
 
 The API describes two getters, one adminitrative function, five variants of
 withdraw functions and three events.
-`withdraw(uint _value)` along with `Deposit()` and `Withdrawal()` events should
+`withdrawAll()` along with `Deposit()` and `Withdrawal()` events should
 be the minimal implimentation with other functions left as optional. 
 
 ## ABI
