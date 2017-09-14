@@ -43,19 +43,11 @@ Returns true if the contract is accepting deposits.
 ```
 function etherBalanceOf(address _addr) constant returns (uint)
 ```
+Recommended
+
 Returns the balance of ether held in the contract for `_addr`
 
 `_addr` An ethereum address
-
-### withdraw
-```
-function withdraw(uint _value) returns (bool)
-```
-Optional
-
-Withdraws a value of ether from the contract. Returns success boolean.
-
-`_value` the value to withdraw
 
 ### withdrawAll
 ```
@@ -67,6 +59,16 @@ Withdraws entire balance of sender to the sender or other internally specified
 address.
 
 Returns success boolean
+
+### withdraw
+```
+function withdraw(uint _value) returns (bool)
+```
+Optional
+
+Withdraws a value of ether from the contract. Returns success boolean.
+
+`_value` the value to withdraw
 
 ### withdrawTo
 ```
@@ -146,10 +148,14 @@ event AcceptingDeposits(bool indexed _accept)
 ```
 Logged upon change to deposit acceptance state
 
-`event Deposit(address indexed _from, uint _value)`
+```
+event Deposit(address indexed _from, uint _value)
+```
 
 Logged upon receiving a deposit
     
-`event Withdrawal(address indexed _from, address indexed _to, uint _value)`
+```
+event Withdrawal(address indexed _from, address indexed _to, uint _value)
+```
 
 Logged upon a withdrawal
