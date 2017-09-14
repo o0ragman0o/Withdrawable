@@ -1,8 +1,8 @@
 /******************************************************************************\
 
 file:   Withdrawable.sol
-ver:    0.3.1
-updated:11-Sep-2017
+ver:    0.3.2
+updated:14-Sep-2017
 author: Darryl Morris (o0ragman0o)
 email:  o0ragman0o AT gmail.com
 
@@ -17,8 +17,7 @@ See MIT Licence for further details.
 
 Change Log
 ----------
-* Added `withdrawAll() returns (bool);`
-* Added `interface WithdrawableItfc`
+* Added `withdrawAllFrom(address _kAddr) returns (bool);`
 
 \******************************************************************************/
 
@@ -72,9 +71,15 @@ interface WitherableItfc
     /// @return success
     function withdrawFor(address _for, uint _value) returns (bool);
     
+    /// @notice Withdraw all this contracts held value from external contract
+    /// at `_from`
+    /// @param _from a contract address where this contract's value is held
+    /// @return success
+    function withdrawAllFrom(address _from) returns (bool);
+    
     /// @notice Withdraw `_value` from external contract at `_from` to this
     /// this contract
-    /// @param _from a holder address in the contract
+    /// @param _from a contract address where this contract's value is held
     /// @param _value the value to withdraw
     /// @return success
     function withdrawFrom(address _from, uint _value) returns (bool);
@@ -145,6 +150,12 @@ contract WithdrawableAbstract
     /// @param _value the value to withdraw
     /// @return success
     function withdrawFor(address _for, uint _value) returns (bool);
+    
+    /// @notice Withdraw all this contracts held value from external contract
+    /// at `_from`
+    /// @param _from a contract address where this contract's value is held
+    /// @return success
+    function withdrawAllFrom(address _from) returns (bool);
     
     /// @notice Withdraw `_value` from external contract at `_from` to this
     /// this contract
@@ -239,13 +250,25 @@ contract Withdrawable is WithdrawableAbstract
         return true;
     }
     
-    // Withdraw ether from an external contract in which this instance holds
-    // a balance of ether
-    function withdrawFrom(address _from, uint _value)
+    // Withdraw all awarded ether from an external contract in which this
+    // instance holds a balance
+    function withdrawAllFrom(address _kAddr)
         public
         returns (bool)
     {
-        Deposit(_from, _value);
-        return WithdrawableAbstract(_from).withdraw(_value);
+        uint currBal = this.bal;
+        WithdrawableAbstract(_kAddr).withdrawAll();
+        Deposit(_from, this.balance - currBal);
+        return true;
+    }
+    
+    // Withdraw ether from an external contract in which this instance holds
+    // a balance
+    function withdrawFrom(address _kAddr, uint _value)
+        public
+        returns (bool)
+    {
+        Deposit(_kAddr, _value);
+        return WithdrawableAbstract(_kAddr).withdraw(_value);
     }
 }
