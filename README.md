@@ -1,5 +1,5 @@
 # Withdrawable
-v0.3.1
+v0.3.2
 
 A contract API and example implimentation to privision point to point pull 
 payments from contract to contract or contract to external account using
@@ -12,15 +12,17 @@ the nature of ether differs enough from tokens for ether to warrent a dedicated
 API standard for moving money between contracts and addresses in a permissioned 
 or unpermissioned manner.
 
-Payment channels, for example, may have a single internally defined recipient
+Payment channels, for example, might have a single internally defined recipient
 so it may be of benefit not to permission the `withdrawAll()` function and allow
 any address to call it and move the money to that recipient.  This makes
 contract to contract transfers and clearing house operations simpler.
 
-The API describes two getters, one adminitrative function, five variants of
-withdraw functions and three events.
+The API describes two getters, one adminitrative function, four variants of
+withdraw functions and three events and two contract initiated withdraw
+functions.
+
 `withdrawAll()` along with `Deposit()` and `Withdrawal()` events should
-be the minimal implimentation with other functions left as optional. 
+be the minimal implimentation with other functions being optional. 
 
 ## ABI
 ```
@@ -33,6 +35,8 @@ be the minimal implimentation with other functions left as optional.
 ```
 function acceptingDeposits() public constant returns(bool)
 ```
+Optional
+
 Returns true if the contract is accepting deposits.
   
 ### etherBalanceOf
@@ -47,6 +51,8 @@ Returns the balance of ether held in the contract for `_addr`
 ```
 function withdraw(uint _value) returns (bool)
 ```
+Optional
+
 Withdraws a value of ether from the contract. Returns success boolean.
 
 `_value` the value to withdraw
@@ -55,6 +61,8 @@ Withdraws a value of ether from the contract. Returns success boolean.
 ```
 function withdrawAll() returns (bool);
 ```
+Required
+
 Withdraws entire balance of sender to the sender or other internally specified
 address.
 
@@ -64,6 +72,8 @@ Returns success boolean
 ```
 function withdrawTo(address _to, uint _value) returns (bool)
 ```
+Optional
+
 Withdraws a value of ether from the contract sending it to a thirdparty address.
 
 `_to` a recipient address
@@ -76,6 +86,8 @@ Returns success boolean
 ```
 function withdrawFor(address _addr, uint _value) returns (bool)
 ```
+Optional
+
 Sends a value of ether held for an address to that address.
 
 `_addr` a holder address in the contract
@@ -84,15 +96,33 @@ Sends a value of ether held for an address to that address.
 
 Return success boolean
 
+### withdrawAllFrom
+```
+function withdrawAllFrom(address _kAddr) returns (bool)
+```
+Optional
+
+Withdraws all awarded ether from an external `Withdrawable` contract in
+which the current contract address may hold value. This function calls the
+`withdrawAll()` function of the thirdparty contract.
+
+`_kAddr` The address of a third party `Withdrawable` contract.'
+
+`_value` The value to withdraw into the current contract.
+
+Returns success boolean
+
 ### withdrawFrom
 ```
-function withdrawFrom(address _addr, uint _value) returns (bool)
+function withdrawFrom(address _kAddr, uint _value) returns (bool)
 ```
+Optional
+
 Withdraws a value of ether from an external `Withdrawable` contract in
 which the current contract address may hold value. This function calls the
 `withdraw(value)` function of the thirdparty contract.
 
-`_addr` The address of a third party `Withdrawable` contract.'
+`_kAddr` The address of a third party `Withdrawable` contract.'
 
 `_value` The value to withdraw into the current contract.
 
@@ -102,6 +132,8 @@ Returns success boolean
 ```
 function acceptDeposits(bool _accept) public returns (bool)
 ```
+Optional
+
 Changes the deposit acceptance state.
 
 `_accept` An accept (`true`) or decline (`false`) boolean.
