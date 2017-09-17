@@ -1,5 +1,5 @@
 # Withdrawable
-v0.3.2
+v0.3.3
 
 A contract API and example implimentation to privision point to point pull 
 payments from contract to contract or contract to external account using
@@ -23,6 +23,41 @@ functions.
 
 `withdrawAll()` along with `Deposit()` and `Withdrawal()` events should
 be the minimal implimentation with other functions being optional. 
+
+## WithdrawableMinItfc
+```
+[{"constant":true,"inputs":[{"name":"_addr","type":"address"}],"name":"etherBalanceOf","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"withdrawTo","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_value","type":"uint256"}],"name":"withdraw","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"withdrawAll","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_accept","type":"bool"}],"name":"acceptDeposits","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_kAddr","type":"address"},{"name":"_value","type":"uint256"}],"name":"withdrawFrom","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_for","type":"address"},{"name":"_value","type":"uint256"}],"name":"withdrawFor","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"acceptingDeposits","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_kAddr","type":"address"}],"name":"withdrawAllFrom","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"payable":true,"stateMutability":"payable","type":"fallback"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_accept","type":"bool"}],"name":"AcceptingDeposits","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_from","type":"address"},{"indexed":false,"name":"_value","type":"uint256"}],"name":"Deposit","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_by","type":"address"},{"indexed":true,"name":"_to","type":"address"},{"indexed":false,"name":"_value","type":"uint256"}],"name":"Withdrawal","type":"event"}]
+```
+
+### withdrawAll
+```
+function withdrawAll() returns (bool);
+```
+Withdraws entire balance to the sender or other internally specified address.
+
+Returns success boolean
+
+### Events
+```
+event Deposit(address indexed _from, uint _value)
+```
+Logged upon receiving a deposit.
+
+`_from` The sender address
+
+`_value` The value of ether recieved
+
+    
+```
+event Withdrawal(address indexed _by, address indexed _to, uint _value)
+```
+Logged upon a withdrawal.
+
+`_by` The caller of the withdrawl
+
+`_to` The addres to which funds were sent
+
+`_value` The value of ether sent
 
 ## ABI
 ```
@@ -146,16 +181,28 @@ Returns success boolean
 ```
 event AcceptingDeposits(bool indexed _accept)
 ```
-Logged upon change to deposit acceptance state
+Logged upon change to deposit acceptance state.
+
+`_accept` A boolean value indicating acceptance state.
 
 ```
 event Deposit(address indexed _from, uint _value)
 ```
+Logged upon receiving a deposit.
 
-Logged upon receiving a deposit
+`_from` The sender address
+
+`_value` The value of ether recieved
+
     
 ```
-event Withdrawal(address indexed _from, address indexed _to, uint _value)
+event Withdrawal(address indexed _by, address indexed _to, uint _value)
 ```
+Logged upon a withdrawal.
 
-Logged upon a withdrawal
+`_by` The caller of the withdrawl
+
+`_to` The addres to which funds were sent
+
+`_value` The value of ether sent
+

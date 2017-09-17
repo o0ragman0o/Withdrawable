@@ -1,8 +1,8 @@
 /******************************************************************************\
 
 file:   Withdrawable.sol
-ver:    0.3.2
-updated:14-Sep-2017
+ver:    0.3.3
+updated:17-Sep-2017
 author: Darryl Morris (o0ragman0o)
 email:  o0ragman0o AT gmail.com
 
@@ -17,27 +17,56 @@ See MIT Licence for further details.
 
 Change Log
 ----------
-* Added `withdrawAllFrom(address _kAddr) returns (bool);`
+* Added minimal interface
+* Fixed WithdrawableItfc typo
 
 \******************************************************************************/
 
 pragma solidity ^0.4.13;
 
-interface WitherableItfc
+interface WithdrawableMinItfc
+{
+//
+// Events
+//
+
+    // Logged upon receiving a deposit
+    /// @param _from The address from which value has been recieved
+    /// @param _value The value of ether received
+    event Deposit(address indexed _from, uint _value);
+    
+    // Logged upon a withdrawal
+    /// @param _by the address of the withdrawer
+    /// @param _to Address to which value was sent
+    /// @param _value The value in ether which was withdrawn
+    event Withdrawal(address indexed _by, address indexed _to, uint _value);
+
+    /// @notice withdraw total balance from account `msg.sender`
+    /// @return success
+    function withdrawAll() returns (bool);
+}
+
+interface WithdrawableItfc
 {
 //
 // Events
 //
 
     // Triggered upon change to deposit acceptance state
+    /// @param _accept Boolean acceptance value
     event AcceptingDeposits(bool indexed _accept);
-    
-    // Triggered upon receiving a deposit
+
+    // Logged upon receiving a deposit
+    /// @param _from The address from which value has been recieved
+    /// @param _value The value of ether received
     event Deposit(address indexed _from, uint _value);
     
-    // Triggered upon a withdrawal
-    event Withdrawal(address indexed _from, address indexed _to, uint _value);
-    
+    // Logged upon a withdrawal
+    /// @param _by the address of the withdrawer
+    /// @param _to Address to which value was sent
+    /// @param _value The value in ether which was withdrawn
+    event Withdrawal(address indexed _by, address indexed _to, uint _value);
+
 //
 // Function Abstracts
 //
@@ -49,14 +78,14 @@ interface WitherableItfc
     /// @return The balance of ether held in the contract for `_addr`
     function etherBalanceOf(address _addr) constant returns (uint);
     
+    /// @notice withdraw total balance from account `msg.sender`
+    /// @return success
+    function withdrawAll() returns (bool);
+
     /// @notice withdraw `_value` from account `msg.sender`
     /// @param _value the value to withdraw
     /// @return success
     function withdraw(uint _value) returns (bool);
-    
-    /// @notice withdraw total balance from account `msg.sender`
-    /// @return success
-    function withdrawAll() returns (bool);
     
     /// @notice Withdraw `_value` from account `msg.sender` and send `_value` to
     /// address `_to`
@@ -91,7 +120,7 @@ interface WitherableItfc
 }
 
 
-contract WithdrawableAbstract
+contract WithdrawableAbstract is WithdrawableItfc
 {
 //
 // State
@@ -101,73 +130,12 @@ contract WithdrawableAbstract
     bool public acceptingDeposits;
 
 //
-// Events
-//
-
-    // Triggered upon change to deposit acceptance state
-    event AcceptingDeposits(bool indexed _accept);
-    
-    // Triggered upon receiving a deposit
-    event Deposit(address indexed _from, uint _value);
-    
-    // Triggered upon a withdrawal
-    event Withdrawal(address indexed _from, address indexed _to, uint _value);
-    
-//
 // Modifiers
 //    
     modifier isAcceptingDeposits() {
         require(acceptingDeposits);
         _;
     }
-    
-//
-// Function Abstracts
-//
-
-    /// @param _addr An ethereum address
-    /// @return The balance of ether held in the contract for `_addr`
-    function etherBalanceOf(address _addr) constant returns (uint);
-    
-    /// @notice withdraw `_value` from account `msg.sender`
-    /// @param _value the value to withdraw
-    /// @return success
-    function withdraw(uint _value) returns (bool);
-    
-    /// @notice withdraw total balance from account `msg.sender`
-    /// @return success
-    function withdrawAll() returns (bool);
-    
-    /// @notice Withdraw `_value` from account `msg.sender` and send `_value` to
-    /// address `_to`
-    /// @param _to a recipient address
-    /// @param _value the value to withdraw
-    /// @return success
-    function withdrawTo(address _to, uint _value) returns (bool);
-    
-    /// @notice withdraw `_value` from account `_for`
-    /// @param _for a holder address in the contract
-    /// @param _value the value to withdraw
-    /// @return success
-    function withdrawFor(address _for, uint _value) returns (bool);
-    
-    /// @notice Withdraw all this contracts held value from external contract
-    /// at `_from`
-    /// @param _from a contract address where this contract's value is held
-    /// @return success
-    function withdrawAllFrom(address _from) returns (bool);
-    
-    /// @notice Withdraw `_value` from external contract at `_from` to this
-    /// this contract
-    /// @param _from a holder address in the contract
-    /// @param _value the value to withdraw
-    /// @return success
-    function withdrawFrom(address _from, uint _value) returns (bool);
-    
-    /// @notice Change the deposit acceptance state to `_accept`
-    /// @param _accept Boolean acceptance state to change to
-    /// @return State change success
-    function acceptDeposits(bool _accept) public returns (bool);
 }
 
 
@@ -245,7 +213,7 @@ contract Withdrawable is WithdrawableAbstract
         returns (bool)
     {
         require(etherBalanceOf(_for) >= _value);
-        Withdrawal(_for, _for, _value);
+        Withdrawal(msg.sender, _for, _value);
         _for.transfer(_value);
         return true;
     }
@@ -256,9 +224,9 @@ contract Withdrawable is WithdrawableAbstract
         public
         returns (bool)
     {
-        uint currBal = this.bal;
-        WithdrawableAbstract(_kAddr).withdrawAll();
-        Deposit(_from, this.balance - currBal);
+        uint currBal = this.balance;
+        WithdrawableMinItfc(_kAddr).withdrawAll();
+        Deposit(_kAddr, this.balance - currBal);
         return true;
     }
     
