@@ -1,8 +1,8 @@
 /******************************************************************************\
 
 file:   Withdrawable.sol
-ver:    0.3.3
-updated:17-Sep-2017
+ver:    0.3.4
+updated:7-Oct-2017
 author: Darryl Morris (o0ragman0o)
 email:  o0ragman0o AT gmail.com
 
@@ -43,7 +43,7 @@ interface WithdrawableMinItfc
 
     /// @notice withdraw total balance from account `msg.sender`
     /// @return success
-    function withdrawAll() returns (bool);
+    function withdrawAll() public returns (bool);
 }
 
 interface WithdrawableItfc
@@ -72,46 +72,46 @@ interface WithdrawableItfc
 //
 
     /// @return Returns whether deposits are accepted
-    function acceptingDeposits() public constant returns (bool);
+    function acceptingDeposits() public view returns (bool);
 
     /// @param _addr An ethereum address
     /// @return The balance of ether held in the contract for `_addr`
-    function etherBalanceOf(address _addr) constant returns (uint);
+    function etherBalanceOf(address _addr) public view returns (uint);
     
     /// @notice withdraw total balance from account `msg.sender`
     /// @return success
-    function withdrawAll() returns (bool);
+    function withdrawAll() public returns (bool);
 
     /// @notice withdraw `_value` from account `msg.sender`
     /// @param _value the value to withdraw
     /// @return success
-    function withdraw(uint _value) returns (bool);
+    function withdraw(uint _value) public returns (bool);
     
     /// @notice Withdraw `_value` from account `msg.sender` and send `_value` to
     /// address `_to`
     /// @param _to a recipient address
     /// @param _value the value to withdraw
     /// @return success
-    function withdrawTo(address _to, uint _value) returns (bool);
+    function withdrawTo(address _to, uint _value) public returns (bool);
     
     /// @notice withdraw `_value` from account `_for`
     /// @param _for a holder address in the contract
     /// @param _value the value to withdraw
     /// @return success
-    function withdrawFor(address _for, uint _value) returns (bool);
+    function withdrawFor(address _for, uint _value) public returns (bool);
     
     /// @notice Withdraw all this contracts held value from external contract
     /// at `_from`
     /// @param _from a contract address where this contract's value is held
     /// @return success
-    function withdrawAllFrom(address _from) returns (bool);
+    function withdrawAllFrom(address _from) public returns (bool);
     
     /// @notice Withdraw `_value` from external contract at `_from` to this
     /// this contract
     /// @param _from a contract address where this contract's value is held
     /// @param _value the value to withdraw
     /// @return success
-    function withdrawFrom(address _from, uint _value) returns (bool);
+    function withdrawFrom(address _from, uint _value) public returns (bool);
     
     /// @notice Change the deposit acceptance state to `_accept`
     /// @param _accept Boolean acceptance state to change to
@@ -127,13 +127,13 @@ contract WithdrawableAbstract is WithdrawableItfc
 //
 
     // Accept/decline payments switch state. Blocking by default
-    bool public acceptingDeposits;
+    bool accepting;
 
 //
 // Modifiers
 //    
     modifier isAcceptingDeposits() {
-        require(acceptingDeposits);
+        require(accepting);
         _;
     }
 }
@@ -146,16 +146,35 @@ contract Withdrawable is WithdrawableAbstract
     address public owner;
 
     function Withdrawable()
+        public
     {
         owner = msg.sender;
     }
     
     // Payable on condition that contract is accepting deposits
     function ()
+        public
         payable
         isAcceptingDeposits
     {
         Deposit(msg.sender, msg.value);
+    }
+    
+    function acceptingDeposits()
+        public
+        view
+        returns (bool)
+    {
+        return accepting;
+    }
+    
+    // Return an ether balance of an address
+    function etherBalanceOf(address _addr)
+        public
+        view
+        returns (uint)
+    {
+        return _addr == owner ? this.balance : 0;    
     }
     
     // Change deposit acceptance state
@@ -164,17 +183,9 @@ contract Withdrawable is WithdrawableAbstract
         returns (bool)
     {
         require(msg.sender == owner);
-        acceptingDeposits = _accept;
+        accepting = _accept;
         AcceptingDeposits(_accept);
         return true;
-    }
-    
-    // Return an ether balance of an address
-    function etherBalanceOf(address _addr)
-        constant
-        returns (uint)
-    {
-        return _addr == owner ? this.balance : 0;    
     }
     
     // Withdraw a value of ether awarded to the caller's address
