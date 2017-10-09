@@ -1,13 +1,14 @@
 /******************************************************************************\
 
 file:   Withdrawable.sol
-ver:    0.3.4
-updated:7-Oct-2017
+ver:    0.4.0
+updated:9-Oct-2017
 author: Darryl Morris (o0ragman0o)
 email:  o0ragman0o AT gmail.com
 
 A contract interface presenting an API for withdraw functionality for balance
-holders and inter-contract pull payments.
+holders and inter-contract pull payments. Caller permissions should be left
+permissive to facilitate 'clearing house' operations.
 
 This software is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -17,8 +18,7 @@ See MIT Licence for further details.
 
 Change Log
 ----------
-* Added minimal interface
-* Fixed WithdrawableItfc typo
+* Added withdrawAllFor(address _addr)
 
 \******************************************************************************/
 
@@ -94,6 +94,11 @@ interface WithdrawableItfc
     /// @return success
     function withdrawTo(address _to, uint _value) public returns (bool);
     
+    /// @notice withdraw total balance for account `_addr`
+    /// @param _addr An address to withraw for
+    /// @return success
+    function withdrawAllFor(address _addr) public returns (bool);
+
     /// @notice withdraw `_value` from account `_for`
     /// @param _for a holder address in the contract
     /// @param _value the value to withdraw
@@ -204,6 +209,7 @@ contract Withdrawable is WithdrawableAbstract
         public
         returns (bool)
     {
+        Withdrawal(msg.sender, msg.sender, etherBalanceOf(msg.sender));
         return withdraw(etherBalanceOf(msg.sender));
     }
     
@@ -218,6 +224,17 @@ contract Withdrawable is WithdrawableAbstract
         return true;
     }
     
+    // Push an entire balance of an address to that address
+    function withdrawAllFor(address _for)
+        public
+        returns (bool)
+    {
+        Withdrawal(msg.sender, _for, etherBalanceOf(msg.sender));
+        _for.transfer(etherBalanceOf(msg.sender));
+        return true;        
+    }
+
+
     // Push a payment to an address of which has awarded ether
     function withdrawFor(address _for, uint _value)
         public

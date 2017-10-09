@@ -1,28 +1,32 @@
 # Withdrawable
-v0.3.4
+v0.4.0
 
 A contract API and example implimentation to privision point to point pull 
 payments from contract to contract or contract to external account using
 a *withdraw* paradigm rather than *transfer*.
 
-Ether differs from other value mechanisms such as ERC20 tokens in that it is 
-intrinsically transferrable between accounts rather than accounts being 
-registered against tokens existing only in a contract. While ERC20 offers `transfer()` and `transferFrom()` 
-the nature of ether differs enough from tokens for ether to warrent a dedicated 
-API standard for moving money between contracts and addresses in a permissioned 
-or unpermissioned manner.
+Ether differs significantly from other value mechanisms such as ERC20 tokens
+in that it is intrinsically transferrable between accounts rather than accounts
+being registered against tokens existing only in a contract. While ERC20 offers `transfer()` and `transferFrom()` 
+the nature of ether differs enough from tokens for *ether* to warrent a dedicated 
+API standard for moving money between contracts and addresses to which
+desitantions and values are permissioned but caller need not be.
 
 Payment channels, for example, might have a single internally defined recipient
 so it may be of benefit not to permission the `withdrawAll()` function and allow
 any address to call it and move the money to that recipient.  This makes
 contract to contract transfers and clearing house operations simpler.
 
-The API describes two getters, one adminitrative function, four variants of
-withdraw functions and three events and two contract initiated withdraw
-functions.
+The API describes two getters, one adminitrative function, five variants of
+withdraw functions, two contract initiated withdraw functions and
+three events.
 
-`withdrawAll()` along with `Deposit()` and `Withdrawal()` events should
-be the minimal implimentation with other functions being optional. 
+A minimal API is offered containing `withdrawAll()` along with `Deposit()` and
+`Withdrawal()` with all other functions being optional. 
+
+A clearing house contract called `Yank` can be supplied an array of withdrawable
+contract addresses and recipient addresses with which to pull money through a chain
+or group of contracts to exit addresses.
 
 ## WithdrawableMinItfc
 ### ABI
@@ -118,6 +122,16 @@ Withdraws a value of ether from the contract sending it to a thirdparty address.
 `_to` a recipient address
 
 `_value` the value to withdraw
+
+Returns success boolean
+
+### withdrawAllFor
+```
+function withdrawAllFor(address _addr) public returns (bool)
+```
+Sends entire balance of the supplied address to the supplied address
+
+`_addr` a holder address in the contract
 
 Returns success boolean
     
