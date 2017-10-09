@@ -1,7 +1,7 @@
 /******************************************************************************\
 
 file:   Yank.sol
-ver:    0.3.4
+ver:    0.4.0
 updated:9-Oct-2017
 author: Darryl Morris (o0ragman0o)
 email:  o0ragman0o AT gmail.com
@@ -28,16 +28,29 @@ Change Log
 
 pragma solidity ^0.4.13;
 
-import "https://github.com/o0ragman0o/Withdrawable/contracts/Withdrawable.sol";
+import "./Withdrawable.sol";
 
 contract Yank
 {
+//
+// Constants
+//
+	bytes32 public constant VERSION = "Yank v0.4.0";
+
+//
+// Events
+//
+
     // Logged when a call to WithdrawlAll is made
     event WithdrawnAll(address indexed _kAddr);
     
     // Logged when a call to WithdrawAllFor is made
     event WithdrawnAllFor(address indexed _kAddr, address indexed _for);
-    
+
+//
+// Functions
+//
+
     /// @dev Arrays must be same length. Recipient addresses may be 0x0
     /// @param _kAddrs An array of Withdrawable contract addresses
     /// @param _addrs An array of recipient addresses
@@ -51,7 +64,7 @@ contract Yank
                 WithdrawnAll(_kAddrs[i]);
             } else {
                 Withdrawable(_kAddrs[i]).withdrawAllFor(_addrs[i]);
-                WithdrawnAll(_kAddrs[i], _addrs[i]);
+                WithdrawnAllFor(_kAddrs[i], _addrs[i]);
             }
         }
     }
