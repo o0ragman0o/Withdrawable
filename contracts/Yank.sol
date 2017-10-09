@@ -55,6 +55,8 @@ contract Yank
     /// @param _kAddrs An array of Withdrawable contract addresses
     /// @param _addrs An array of recipient addresses
     function yank(address[] _kAddrs, address[] _addrs)
+    	public
+    	returns (bool)
     {
         uint i;
         uint l = _kAddrs.length;
@@ -67,6 +69,7 @@ contract Yank
                 WithdrawnAllFor(_kAddrs[i], _addrs[i]);
             }
         }
+        return true;
     }
 }
 
