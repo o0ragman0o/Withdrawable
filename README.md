@@ -24,9 +24,9 @@ three events.
 A minimal API is offered containing `withdrawAll()` along with `Deposit()` and
 `Withdrawal()` with all other functions being optional. 
 
-A stateless clearing house contract called `Yank` can be supplied an array of withdrawable
-contract addresses and recipient addresses with which to pull money through a chain
-or group of contracts to exit addresses.
+A stateless singleton clearing house contract called `Yank` can be supplied an
+array of withdrawable contract addresses and recipient addresses with which to
+pull money through a chain or group of contracts to exit addresses.
 
 ## WithdrawableMinItfc
 ### ABI
@@ -225,7 +225,7 @@ Logged upon a withdrawal.
 ## Yank
 ### ABI
 ```
-[{"constant":false,"inputs":[{"name":"_kAddrs","type":"address[]"},{"name":"_addrs","type":"address[]"}],"name":"yank","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"VERSION","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_kAddr","type":"address"}],"name":"WithdrawnAll","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_kAddr","type":"address"},{"indexed":true,"name":"_for","type":"address"}],"name":"WithdrawnAllFor","type":"event"}]
+[{"constant":false,"inputs":[{"name":"_kAddrs","type":"address[]"},{"name":"_addrs","type":"address[]"}],"name":"yank","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"regName","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"VERSION","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_kAddr","type":"address"}],"name":"WithdrawnAll","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_kAddr","type":"address"},{"indexed":true,"name":"_for","type":"address"}],"name":"WithdrawnAllFor","type":"event"}]
 ```
 
 ### VERSION
@@ -233,6 +233,12 @@ Logged upon a withdrawal.
 function VERSION() public constant returns (bytes32)
 ```
 Returns the UTF8 encoded version as a bytes32
+
+### regName
+```
+function regName() public constant returns (bytes32)
+```
+Returns 'yank' as a bytes32 type for registration with SandalStraps
 
 ### yank
 ```

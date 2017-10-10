@@ -6,13 +6,13 @@ updated:9-Oct-2017
 author: Darryl Morris (o0ragman0o)
 email:  o0ragman0o AT gmail.com
 
-Yank is a standalone took to pull a series of `WithdrawAll()` and
-`WithdrawAllFor()` payments from Withdrawable contracts. This can pull ether
+Yank is a stand-alone and stateless tool to pull a series of `WithdrawAll()`
+and `WithdrawAllFor()` payments from Withdrawable contracts. This can pull ether
 through a chain of contract addresses to exit address/s
 
-`yankAll(_kAddrs, _addrs)` is provided two arrays of contract addresses and
+`yank(_kAddrs, _addrs)` is provided two arrays of contract addresses and
 recipient addresses of the same length. If a recipient address for an index
-is 0x0,Yank will call the WithdrawAll(), else WithdrawAllFor()
+is 0x0, Yank will call the WithdrawAll(), else WithdrawAllFor()
 
 This software is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -36,6 +36,9 @@ contract Yank
 // Constants
 //
 	bytes32 public constant VERSION = "Yank v0.4.0";
+
+	// For SandalStraps registration
+	bytes32 public constant regName = "yank";
 
 //
 // Events
