@@ -225,7 +225,7 @@ Logged upon a withdrawal.
 ## Yank
 ### ABI
 ```
-[{"constant":false,"inputs":[{"name":"_kAddrs","type":"address[]"},{"name":"_addrs","type":"address[]"}],"name":"yank","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"regName","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"VERSION","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_kAddr","type":"address"}],"name":"WithdrawnAll","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_kAddr","type":"address"},{"indexed":true,"name":"_for","type":"address"}],"name":"WithdrawnAllFor","type":"event"}]
+[{"constant":false,"inputs":[{"name":"_kAddrs","type":"address[]"},{"name":"_addrs","type":"address[]"}],"name":"yank","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"regName","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":true,"inputs":[],"name":"VERSION","outputs":[{"name":"","type":"bytes32"}],"payable":false,"stateMutability":"view","type":"function"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_kAddr","type":"address"}],"name":"WithdrawnAll","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_kAddr","type":"address"},{"indexed":true,"name":"_for","type":"address"}],"name":"WithdrawnAllFor","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_kAddr","type":"address"},{"indexed":true,"name":"_for","type":"address"}],"name":"Failed","type":"event"}]
 ```
 
 ### VERSION
@@ -244,10 +244,29 @@ Returns 'yank' as a bytes32 type for registration with SandalStraps
 ```
 function yank(address[] _kAddrs, address[] _addrs) public returns (bool);
 ```
-Performs clearing house pull payments across an array of withdrawable contracts.
+Performs clearing house pull payments across an array of withdrawable contracts by
+by calling `withdrawAll()` and `withdrawAllFor()`. Chained contracts should be ordered
+furtherest to closest. Any throws in the chain will revert the transaction.
 `_kAddrs` and `_addrs` must be of equal length with `_addrs` values being `0x0` where
-not recipient address is required.
+no recipient address is required.
 
 `_kAddrs[]` An array of withdrawable contracts
 
 `_addrs[]` An array of recipient addresses
+
+### Events
+```
+event WithdrawnAll(address indexed _kAddr);
+```
+Logged when a call to WithdrawlAll is made
+
+```
+event WithdrawnAllFor(address indexed _kAddr, address indexed _for);
+```
+Logged when a call to WithdrawAllFor is made
+
+```
+event Failed(address indexed _kAddr, address indexed _for);
+```
+Logged when a withdraw fails and does not revert the transaction.
+

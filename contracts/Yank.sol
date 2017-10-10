@@ -50,6 +50,9 @@ contract Yank
     // Logged when a call to WithdrawAllFor is made
     event WithdrawnAllFor(address indexed _kAddr, address indexed _for);
 
+    // Logged when a withdraw fails
+    event Failed(address indexed _kAddr, address indexed _for);
+
 //
 // Functions
 //
@@ -62,17 +65,18 @@ contract Yank
     	returns (bool)
     {
         uint i;
+        bool pass;
         uint l = _kAddrs.length;
         for(i; i < l; i++) {
-            if (_addrs[0] == 0x0) {
-                Withdrawable(_kAddrs[i]).withdrawAll();
-                WithdrawnAll(_kAddrs[i]);
+            if (_addrs[i] == 0x0) {
+                pass = Withdrawable(_kAddrs[i]).withdrawAll();
+                if(pass) WithdrawnAll(_kAddrs[i]);
             } else {
-                Withdrawable(_kAddrs[i]).withdrawAllFor(_addrs[i]);
-                WithdrawnAllFor(_kAddrs[i], _addrs[i]);
+                pass = Withdrawable(_kAddrs[i]).withdrawAllFor(_addrs[i]);
+                if(pass) WithdrawnAllFor(_kAddrs[i], _addrs[i]);
             }
+            if (!pass) Failed(_kAddrs[i], _addrs[i]);
         }
         return true;
     }
 }
-
