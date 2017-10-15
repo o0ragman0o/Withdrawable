@@ -1,16 +1,18 @@
 # Withdrawable
-v0.4.0
+v0.4.1
 
 A contract API and example implimentation to privision point to point pull 
 payments from contract to contract or contract to external account using
 a *withdraw* paradigm rather than *transfer*.
 
 Ether differs significantly from other value mechanisms such as ERC20 tokens
-in that it is intrinsically transferrable between accounts rather than accounts
-being registered against tokens existing only in a contract. While ERC20 offers `transfer()` and `transferFrom()` 
-the nature of ether differs enough from tokens for *ether* to warrent a dedicated 
-API standard for moving money between contracts and addresses to which
-destinations and values are permissioned but caller need not be.
+in that it is intrinsically transferrable between accounts rather than addresses
+being registered against tokens existing only in a contract.
+While ERC20 offers `transfer()` and `transferFrom()` which have inspired
+'wrapped ether' for token like transfers of ether, the nature of ether differs
+enough from tokens for *ether* to warrent a dedicated API standard for moving
+money between contracts and addresses to which destinations and values are
+permissioned but caller need not be.
 
 Payment channels, for example, might have a single internally defined recipient
 so it may be of benefit not to permission the `withdrawAll()` function and allow
@@ -22,10 +24,10 @@ withdraw functions, two contract initiated withdraw functions and
 three events.
 
 A minimal API is offered containing `withdrawAll()` along with `Deposit()` and
-`Withdrawal()` with all other functions being optional. 
+`Withdrawal()` with all other functions in the extended API being optional. 
 
-A stateless singleton clearing house contract called `Yank` can be supplied an
-array of withdrawable contract addresses and recipient addresses with which to
+A stateless singleton clearing house contract called `Yank` can be supplied
+arrays of withdrawable contract addresses and recipient addresses with which to
 pull money through a chain or group of contracts to exit addresses.
 
 ## WithdrawableMinItfc
@@ -127,7 +129,7 @@ Returns success boolean
 
 ### withdrawAllFor
 ```
-function withdrawAllFor(address _addr) public returns (bool)
+function withdrawAllFor(address[] _addrs) public returns (bool)
 ```
 Sends entire balance of the supplied address to the supplied address
 
@@ -137,7 +139,7 @@ Returns success boolean
     
 ### withdrawFor
 ```
-function withdrawFor(address _addr, uint _value) public returns (bool)
+function withdrawFor(address[] _addrs, uint[] _values) public returns (bool)
 ```
 Optional
 

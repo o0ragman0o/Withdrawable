@@ -1,8 +1,8 @@
 /******************************************************************************\
 
 file:   Yank.sol
-ver:    0.4.0
-updated:9-Oct-2017
+ver:    0.4.1
+updated:15-Oct-2017
 author: Darryl Morris (o0ragman0o)
 email:  o0ragman0o AT gmail.com
 
@@ -22,7 +22,7 @@ See MIT Licence for further details.
 
 Change Log
 ----------
-* First release
+* Using Withdrawlable API 0.4.1
 
 \******************************************************************************/
 
@@ -35,7 +35,7 @@ contract Yank
 //
 // Constants
 //
-	bytes32 public constant VERSION = "Yank v0.4.0";
+	bytes32 public constant VERSION = "Yank v0.4.1";
 
 	// For SandalStraps registration
 	bytes32 public constant regName = "yank";
@@ -67,15 +67,21 @@ contract Yank
         uint i;
         bool pass;
         uint l = _kAddrs.length;
+        address kAddr;
+        address addr;
+        address[] memory arr;
         for(i; i < l; i++) {
-            if (_addrs[i] == 0x0) {
-                pass = Withdrawable(_kAddrs[i]).withdrawAll();
-                if(pass) WithdrawnAll(_kAddrs[i]);
+            kAddr = _kAddrs[i];
+            addr = _addrs[i];
+            if (addr == 0x0) {
+                pass = Withdrawable(kAddr).withdrawAll();
+                if(pass) WithdrawnAll(kAddr);
             } else {
-                pass = Withdrawable(_kAddrs[i]).withdrawAllFor(_addrs[i]);
-                if(pass) WithdrawnAllFor(_kAddrs[i], _addrs[i]);
+               arr[0] = addr;
+                pass = Withdrawable(kAddr).withdrawAllFor(arr);
+                if(pass) WithdrawnAllFor(kAddr, addr);
             }
-            if (!pass) Failed(_kAddrs[i], _addrs[i]);
+            if (!pass) Failed(kAddr, addr);
         }
         return true;
     }

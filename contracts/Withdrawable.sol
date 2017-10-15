@@ -1,8 +1,8 @@
 /******************************************************************************\
 
 file:   Withdrawable.sol
-ver:    0.4.0
-updated:9-Oct-2017
+ver:    0.4.1
+updated:15-Oct-2017
 author: Darryl Morris (o0ragman0o)
 email:  o0ragman0o AT gmail.com
 
@@ -18,7 +18,8 @@ See MIT Licence for further details.
 
 Change Log
 ----------
-* Added withdrawAllFor(address _addr)
+* changed `withdrawAllFor(address _addr)` to `withdrawAllFor(address[] _addrs)`
+* changed `withdrawFor(address _addr, uint _value)` to `withdrawFor(address[] _addrs, uint _values[])`
 
 \******************************************************************************/
 
@@ -95,15 +96,15 @@ interface WithdrawableItfc
     function withdrawTo(address _to, uint _value) public returns (bool);
     
     /// @notice withdraw total balance for account `_addr`
-    /// @param _addr An address to withraw for
+    /// @param _addrs An array of address to withraw for
     /// @return success
-    function withdrawAllFor(address _addr) public returns (bool);
+    function withdrawAllFor(address[] _addrs) public returns (bool);
 
     /// @notice withdraw `_value` from account `_for`
-    /// @param _for a holder address in the contract
-    /// @param _value the value to withdraw
+    /// @param _addrs An array of address to withraw for
+    /// @param _values An array of values to withdraw
     /// @return success
-    function withdrawFor(address _for, uint _value) public returns (bool);
+    function withdrawFor(address[] _addrs, uint[] _values) public returns (bool);
     
     /// @notice Withdraw all this contracts held value from external contract
     /// at `_from`
@@ -225,24 +226,33 @@ contract Withdrawable is WithdrawableAbstract
     }
     
     // Push an entire balance of an address to that address
-    function withdrawAllFor(address _for)
+    function withdrawAllFor(address[] _addrs)
         public
         returns (bool)
     {
-        Withdrawal(msg.sender, _for, etherBalanceOf(msg.sender));
-        _for.transfer(etherBalanceOf(msg.sender));
+        for(uint i; i < _addrs.length; i++) {
+            Withdrawal(msg.sender, _addrs[i], etherBalanceOf(_addrs[i]));
+            _addrs[i].transfer(etherBalanceOf(_addrs[i]));
+        }
         return true;        
     }
 
 
     // Push a payment to an address of which has awarded ether
-    function withdrawFor(address _for, uint _value)
+    function withdrawFor(address[] _addrs, uint[] _values)
         public
         returns (bool)
     {
-        require(etherBalanceOf(_for) >= _value);
-        Withdrawal(msg.sender, _for, _value);
-        _for.transfer(_value);
+        require(_addrs.length == _values.length);
+        address addr;
+        uint value;
+        for(uint i; i < _addrs.length; i++) {
+            addr = _addrs[i];
+            value = _values[i];
+            require(etherBalanceOf(addr) >= value);
+            Withdrawal(msg.sender, addr, value);
+            addr.transfer(value);
+        }
         return true;
     }
     
