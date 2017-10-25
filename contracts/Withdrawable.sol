@@ -1,14 +1,14 @@
 /******************************************************************************\
 
 file:   Withdrawable.sol
-ver:    0.4.1
-updated:15-Oct-2017
+ver:    0.4.2
+updated:25-Oct-2017
 author: Darryl Morris (o0ragman0o)
 email:  o0ragman0o AT gmail.com
 
-A contract interface presenting an API for withdraw functionality for balance
-holders and inter-contract pull payments. Caller permissions should be left
-permissive to facilitate 'clearing house' operations.
+A contract interface presenting an API for withdrawal functionality of ether
+balances and inter-contract pull and push payments. Caller permissions should
+be left permissive to facilitate 'clearing house' operations.
 
 This software is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -18,135 +18,106 @@ See MIT Licence for further details.
 
 Change Log
 ----------
-* changed `withdrawAllFor(address _addr)` to `withdrawAllFor(address[] _addrs)`
-* changed `withdrawFor(address _addr, uint _value)` to `withdrawFor(address[] _addrs, uint _values[])`
+* removed `acceptingDeposits` in accordance to draft EIP disallowing reverting
+upon deposit.
 
 \******************************************************************************/
 
 pragma solidity ^0.4.13;
 
+// The minimum interface supporting pull payments with deposits and withdrawl
+// events
 interface WithdrawableMinItfc
 {
 //
 // Events
 //
 
-    // Logged upon receiving a deposit
+    /// @dev Logged upon receiving a deposit
     /// @param _from The address from which value has been recieved
     /// @param _value The value of ether received
     event Deposit(address indexed _from, uint _value);
     
-    // Logged upon a withdrawal
-    /// @param _by the address of the withdrawer
+    /// @dev Logged upon a withdrawal
+    /// @param _from the address accounted to have owned the ether
     /// @param _to Address to which value was sent
     /// @param _value The value in ether which was withdrawn
-    event Withdrawal(address indexed _by, address indexed _to, uint _value);
+    event Withdrawal(address indexed _from, address indexed _to, uint _value);
 
     /// @notice withdraw total balance from account `msg.sender`
     /// @return success
     function withdrawAll() public returns (bool);
 }
 
+// The extended interface of optional API state variables, functions, and events
 interface WithdrawableItfc
 {
 //
 // Events
 //
 
-    // Triggered upon change to deposit acceptance state
-    /// @param _accept Boolean acceptance value
-    event AcceptingDeposits(bool indexed _accept);
-
-    // Logged upon receiving a deposit
+    /// @dev Logged upon receiving a deposit
     /// @param _from The address from which value has been recieved
     /// @param _value The value of ether received
     event Deposit(address indexed _from, uint _value);
     
-    // Logged upon a withdrawal
-    /// @param _by the address of the withdrawer
+    /// @dev Logged upon a withdrawal
+    /// @param _from the address accounted to have owned the ether
     /// @param _to Address to which value was sent
     /// @param _value The value in ether which was withdrawn
-    event Withdrawal(address indexed _by, address indexed _to, uint _value);
+    event Withdrawal(address indexed _from, address indexed _to, uint _value);
 
 //
 // Function Abstracts
 //
-
-    /// @return Returns whether deposits are accepted
-    function acceptingDeposits() public view returns (bool);
 
     /// @param _addr An ethereum address
     /// @return The balance of ether held in the contract for `_addr`
     function etherBalanceOf(address _addr) public view returns (uint);
     
     /// @notice withdraw total balance from account `msg.sender`
-    /// @return success
+    /// @return Boolean success value
     function withdrawAll() public returns (bool);
 
-    /// @notice withdraw `_value` from account `msg.sender`
+    /// @notice Withdraw `_value` from account `msg.sender`
     /// @param _value the value to withdraw
-    /// @return success
+    /// @return Boolean success value
     function withdraw(uint _value) public returns (bool);
     
     /// @notice Withdraw `_value` from account `msg.sender` and send `_value` to
     /// address `_to`
     /// @param _to a recipient address
     /// @param _value the value to withdraw
-    /// @return success
+    /// @return Boolean success value
     function withdrawTo(address _to, uint _value) public returns (bool);
     
-    /// @notice withdraw total balance for account `_addr`
+    /// @notice Withdraw total balance for an array of accounts
     /// @param _addrs An array of address to withraw for
-    /// @return success
+    /// @return Boolean success value
     function withdrawAllFor(address[] _addrs) public returns (bool);
 
-    /// @notice withdraw `_value` from account `_for`
+    /// @notice Withdraw respective values for an array of addresses
     /// @param _addrs An array of address to withraw for
     /// @param _values An array of values to withdraw
-    /// @return success
+    /// @dev Values must be valid or the call will throw
+    /// @return Boolean success value
     function withdrawFor(address[] _addrs, uint[] _values) public returns (bool);
     
-    /// @notice Withdraw all this contracts held value from external contract
-    /// at `_from`
+    /// @notice Have this contract withdraw from contract at `_from` 
     /// @param _from a contract address where this contract's value is held
-    /// @return success
+    /// @return Boolean success value
     function withdrawAllFrom(address _from) public returns (bool);
     
-    /// @notice Withdraw `_value` from external contract at `_from` to this
-    /// this contract
+    /// @notice Have this contract withdraw `_value` from contract at `_from` 
     /// @param _from a contract address where this contract's value is held
     /// @param _value the value to withdraw
-    /// @return success
+    /// @return Boolean success value
     function withdrawFrom(address _from, uint _value) public returns (bool);
-    
-    /// @notice Change the deposit acceptance state to `_accept`
-    /// @param _accept Boolean acceptance state to change to
-    /// @return State change success
-    function acceptDeposits(bool _accept) public returns (bool);
 }
 
 
-contract WithdrawableAbstract is WithdrawableItfc
-{
-//
-// State
-//
-
-    // Accept/decline payments switch state. Blocking by default
-    bool accepting;
-
-//
-// Modifiers
-//    
-    modifier isAcceptingDeposits() {
-        require(accepting);
-        _;
-    }
-}
-
-
-// Example implimentation
-contract Withdrawable is WithdrawableAbstract
+// Example implementation
+contract Withdrawable is WithdrawableItfc
 {
     // Withdrawable contracts should have an owner
     address public owner;
@@ -161,17 +132,10 @@ contract Withdrawable is WithdrawableAbstract
     function ()
         public
         payable
-        isAcceptingDeposits
     {
-        Deposit(msg.sender, msg.value);
-    }
-    
-    function acceptingDeposits()
-        public
-        view
-        returns (bool)
-    {
-        return accepting;
+        if (msg.value > 0) {
+            Deposit(msg.sender, msg.value);
+        }
     }
     
     // Return an ether balance of an address
@@ -183,23 +147,13 @@ contract Withdrawable is WithdrawableAbstract
         return _addr == owner ? this.balance : 0;    
     }
     
-    // Change deposit acceptance state
-    function acceptDeposits(bool _accept)
-        public
-        returns (bool)
-    {
-        require(msg.sender == owner);
-        accepting = _accept;
-        AcceptingDeposits(_accept);
-        return true;
-    }
-    
     // Withdraw a value of ether awarded to the caller's address
     function withdraw(uint _value)
         public
         returns (bool)
     {
-        require(etherBalanceOf(msg.sender) >= _value);
+        // Return on false if transfer would have reverted
+        if (_value > etherBalanceOf(msg.sender)) return false;
         Withdrawal(msg.sender, msg.sender, _value);
         msg.sender.transfer(_value);
         return true;
@@ -210,8 +164,12 @@ contract Withdrawable is WithdrawableAbstract
         public
         returns (bool)
     {
-        Withdrawal(msg.sender, msg.sender, etherBalanceOf(msg.sender));
-        return withdraw(etherBalanceOf(msg.sender));
+        uint value = etherBalanceOf(msg.sender);
+        if (value > 0) {
+            msg.sender.transfer(value);
+            Withdrawal(msg.sender, msg.sender, value);
+        }
+        return true;
     }
     
     // Withdraw a value of ether sending it to the specified address
@@ -219,7 +177,7 @@ contract Withdrawable is WithdrawableAbstract
         public
         returns (bool)
     {
-        require(etherBalanceOf(msg.sender) >= _value);
+        if (_value > etherBalanceOf(msg.sender)) return false;
         Withdrawal(msg.sender, _to, _value);
         _to.transfer(_value);
         return true;
@@ -231,7 +189,7 @@ contract Withdrawable is WithdrawableAbstract
         returns (bool)
     {
         for(uint i; i < _addrs.length; i++) {
-            Withdrawal(msg.sender, _addrs[i], etherBalanceOf(_addrs[i]));
+            Withdrawal(this, _addrs[i], etherBalanceOf(_addrs[i]));
             _addrs[i].transfer(etherBalanceOf(_addrs[i]));
         }
         return true;        
@@ -243,7 +201,7 @@ contract Withdrawable is WithdrawableAbstract
         public
         returns (bool)
     {
-        require(_addrs.length == _values.length);
+        if(_addrs.length != _values.length) return false;
         address addr;
         uint value;
         for(uint i; i < _addrs.length; i++) {
@@ -274,7 +232,9 @@ contract Withdrawable is WithdrawableAbstract
         public
         returns (bool)
     {
-        Deposit(_kAddr, _value);
-        return WithdrawableAbstract(_kAddr).withdraw(_value);
+        uint currBal = this.balance;
+        if(!WithdrawableItfc(_kAddr).withdraw(_value)) return false;
+        Deposit(_kAddr, this.balance - currBal);
+        return true;
     }
 }

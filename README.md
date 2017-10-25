@@ -1,7 +1,7 @@
 # Withdrawable
-v0.4.1
+v0.4.2
 
-A contract API and example implimentation to privision point to point pull 
+A contract API and example implementation to provision point to point pull 
 payments from contract to contract or contract to external account using
 a *withdraw* paradigm rather than *transfer*.
 
@@ -9,31 +9,30 @@ Ether differs significantly from other value mechanisms such as ERC20 tokens
 in that it is intrinsically transferrable between accounts rather than addresses
 being registered against tokens existing only in a contract.
 While ERC20 offers `transfer()` and `transferFrom()` which have inspired
-'wrapped ether' for token like transfers of ether, the nature of ether differs
-enough from tokens for *ether* to warrent a dedicated API standard for moving
-money between contracts and addresses to which destinations and values are
-permissioned but caller need not be.
+'wrapped ether' for token like transfers of ether within a contract, the nature
+of ether differs enough from tokens for *ether* to warrent a dedicated API
+standard for moving money between contracts and addresses to which destinations
+and values are internally defined but caller need not be.
 
 Payment channels, for example, might have a single internally defined recipient
-so it may be of benefit not to permission the `withdrawAll()` function and allow
-any address to call it and move the money to that recipient.  This makes
+so there is no need to permission the caller of `withdrawAll()` so as to
+allow any address to call it and move the money to that recipient.  This makes
 contract to contract transfers and clearing house operations simpler.
 
-The API describes two getters, one adminitrative function, five variants of
-withdraw functions, two contract initiated withdraw functions and
-three events.
+The minimal API defines `withdrawAll()` along with events `Deposit()` and
+`Withdrawal()` with all other state variables and functions in the extended API
+being optional. 
 
-A minimal API is offered containing `withdrawAll()` along with `Deposit()` and
-`Withdrawal()` with all other functions in the extended API being optional. 
-
-A stateless singleton clearing house contract called `Yank` can be supplied
-arrays of withdrawable contract addresses and recipient addresses with which to
-pull money through a chain or group of contracts to exit addresses.
+# Yank
+To facilitate economical clearing house transactions, a stateless singleton
+contract called `Yank` can be supplied arrays of withdrawable contract addresses
+and respective recipient addresses with which to pull money through a chain or
+group of contracts to exit addresses.
 
 ## WithdrawableMinItfc
 ### ABI
 ```
-[{"constant":true,"inputs":[{"name":"_addr","type":"address"}],"name":"etherBalanceOf","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"withdrawTo","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_value","type":"uint256"}],"name":"withdraw","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"withdrawAll","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_accept","type":"bool"}],"name":"acceptDeposits","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_from","type":"address"},{"name":"_value","type":"uint256"}],"name":"withdrawFrom","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_for","type":"address"},{"name":"_value","type":"uint256"}],"name":"withdrawFor","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"acceptingDeposits","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_from","type":"address"}],"name":"withdrawAllFrom","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_accept","type":"bool"}],"name":"AcceptingDeposits","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_from","type":"address"},{"indexed":false,"name":"_value","type":"uint256"}],"name":"Deposit","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_by","type":"address"},{"indexed":true,"name":"_to","type":"address"},{"indexed":false,"name":"_value","type":"uint256"}],"name":"Withdrawal","type":"event"}]
+[{"constant":false,"inputs":[],"name":"withdrawAll","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_from","type":"address"},{"indexed":false,"name":"_value","type":"uint256"}],"name":"Deposit","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_from","type":"address"},{"indexed":true,"name":"_to","type":"address"},{"indexed":false,"name":"_value","type":"uint256"}],"name":"Withdrawal","type":"event"}]
 ```
 
 ### withdrawAll
@@ -56,11 +55,11 @@ Logged upon receiving a deposit.
 
     
 ```
-event Withdrawal(address indexed _by, address indexed _to, uint _value)
+event Withdrawal(address indexed _from, address indexed _to, uint _value)
 ```
 Logged upon a withdrawal.
 
-`_by` The caller of the withdrawl
+`_from` The address account by the contract to have owned the ether
 
 `_to` The addres to which funds were sent
 
@@ -72,16 +71,9 @@ Logged upon a withdrawal.
 
 ### ABI
 ```
-[{"constant":true,"inputs":[{"name":"_addr","type":"address"}],"name":"etherBalanceOf","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"withdrawTo","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_value","type":"uint256"}],"name":"withdraw","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_for","type":"address"}],"name":"withdrawAllFor","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"withdrawAll","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_accept","type":"bool"}],"name":"acceptDeposits","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"owner","outputs":[{"name":"","type":"address"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_kAddr","type":"address"},{"name":"_value","type":"uint256"}],"name":"withdrawFrom","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_for","type":"address"},{"name":"_value","type":"uint256"}],"name":"withdrawFor","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":true,"inputs":[],"name":"acceptingDeposits","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_kAddr","type":"address"}],"name":"withdrawAllFrom","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"inputs":[],"payable":false,"stateMutability":"nonpayable","type":"constructor"},{"payable":true,"stateMutability":"payable","type":"fallback"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_accept","type":"bool"}],"name":"AcceptingDeposits","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_from","type":"address"},{"indexed":false,"name":"_value","type":"uint256"}],"name":"Deposit","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_by","type":"address"},{"indexed":true,"name":"_to","type":"address"},{"indexed":false,"name":"_value","type":"uint256"}],"name":"Withdrawal","type":"event"}]
+[{"constant":true,"inputs":[{"name":"_addr","type":"address"}],"name":"etherBalanceOf","outputs":[{"name":"","type":"uint256"}],"payable":false,"stateMutability":"view","type":"function"},{"constant":false,"inputs":[{"name":"_to","type":"address"},{"name":"_value","type":"uint256"}],"name":"withdrawTo","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_value","type":"uint256"}],"name":"withdraw","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[],"name":"withdrawAll","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_from","type":"address"},{"name":"_value","type":"uint256"}],"name":"withdrawFrom","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_addrs","type":"address[]"},{"name":"_values","type":"uint256[]"}],"name":"withdrawFor","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_addrs","type":"address[]"}],"name":"withdrawAllFor","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"constant":false,"inputs":[{"name":"_from","type":"address"}],"name":"withdrawAllFrom","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_from","type":"address"},{"indexed":false,"name":"_value","type":"uint256"}],"name":"Deposit","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_from","type":"address"},{"indexed":true,"name":"_to","type":"address"},{"indexed":false,"name":"_value","type":"uint256"}],"name":"Withdrawal","type":"event"}]
 ```
-### acceptingDeposits
-```
-function acceptingDeposits() public view returns(bool)
-```
-Optional
 
-Returns true if the contract is accepting deposits.
-  
 ### etherBalanceOf
 ```
 function etherBalanceOf(address _addr) public view returns (uint)
@@ -183,26 +175,7 @@ which the current contract address may hold value. This function calls the
 
 Returns success boolean
 
-### acceptDeposits
-```
-function acceptDeposits(bool _accept) public returns (bool)
-```
-Optional
-
-Changes the deposit acceptance state.
-
-`_accept` An accept (`true`) or decline (`false`) boolean.
-
-Returns success boolean
-
 ### Events
-```
-event AcceptingDeposits(bool indexed _accept)
-```
-Logged upon change to deposit acceptance state.
-
-`_accept` A boolean value indicating acceptance state.
-
 ```
 event Deposit(address indexed _from, uint _value)
 ```
@@ -212,13 +185,13 @@ Logged upon receiving a deposit.
 
 `_value` The value of ether recieved
 
-    
+
 ```
-event Withdrawal(address indexed _by, address indexed _to, uint _value)
+event Withdrawal(address indexed _from, address indexed _to, uint _value)
 ```
 Logged upon a withdrawal.
 
-`_by` The caller of the withdrawl
+`_from` The address account by the contract to have owned the ether
 
 `_to` The addres to which funds were sent
 
@@ -240,7 +213,7 @@ Returns the UTF8 encoded version as a bytes32
 ```
 function regName() public constant returns (bytes32)
 ```
-Returns 'yank' as a bytes32 type for registration with SandalStraps
+Returns 'yank' as a bytes32 type for registration with the SandalStraps framework
 
 ### yank
 ```
@@ -250,7 +223,8 @@ Performs clearing house pull payments across an array of withdrawable contracts 
 by calling `withdrawAll()` and `withdrawAllFor()`. Chained contracts should be ordered
 furtherest to closest. Any throws in the chain will revert the transaction.
 `_kAddrs` and `_addrs` must be of equal length with `_addrs` values being `0x0` where
-no recipient address is required.
+no recipient address is required. Ether that may have accumulated in the Yank contract
+itself is sent to msg.sender at the end of the call.
 
 `_kAddrs[]` An array of withdrawable contracts
 
