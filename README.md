@@ -1,5 +1,5 @@
 # Withdrawable
-v0.4.2
+v0.4.3
 
 A contract API and example implementation to provision point to point pull 
 payments from contract to contract or contract to external account using
@@ -29,7 +29,7 @@ contract called `Yank` can be supplied arrays of withdrawable contract addresses
 and respective recipient addresses with which to pull money through a chain or
 group of contracts to exit addresses.
 
-## WithdrawableMinItfc
+## WithdrawableMinAbstract
 ### ABI
 ```
 [{"constant":false,"inputs":[],"name":"withdrawAll","outputs":[{"name":"","type":"bool"}],"payable":false,"stateMutability":"nonpayable","type":"function"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_from","type":"address"},{"indexed":false,"name":"_value","type":"uint256"}],"name":"Deposit","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"name":"_from","type":"address"},{"indexed":true,"name":"_to","type":"address"},{"indexed":false,"name":"_value","type":"uint256"}],"name":"Withdrawal","type":"event"}]

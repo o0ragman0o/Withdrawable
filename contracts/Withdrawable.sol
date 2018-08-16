@@ -1,8 +1,8 @@
 /******************************************************************************\
 
 file:   Withdrawable.sol
-ver:    0.4.2
-updated:25-Oct-2017
+ver:    0.4.3
+updated:16-Aug-2018
 author: Darryl Morris (o0ragman0o)
 email:  o0ragman0o AT gmail.com
 
@@ -18,16 +18,19 @@ See MIT Licence for further details.
 
 Change Log
 ----------
-* removed `acceptingDeposits` in accordance to draft EIP disallowing reverting
-upon deposit.
+* Using Solidity 0.4.24 syntax
+* dropped use of `interface` and reverting back to abstract contracts. see:
+  https://github.com/ethereum/solidity/issues/4832
+* Changed from `Itfc` to `Abstract` suffix
+
 
 \******************************************************************************/
 
-pragma solidity ^0.4.13;
+pragma solidity ^0.4.24;
 
 // The minimum interface supporting pull payments with deposits and withdrawl
 // events
-interface WithdrawableMinItfc
+contract WithdrawableMinAbstract
 {
 //
 // Events
@@ -46,11 +49,11 @@ interface WithdrawableMinItfc
 
     /// @notice withdraw total balance from account `msg.sender`
     /// @return success
-    function withdrawAll() public returns (bool);
+    function withdrawAll() external returns (bool);
 }
 
 // The extended interface of optional API state variables, functions, and events
-interface WithdrawableItfc
+contract WithdrawableAbstract
 {
 //
 // Events
@@ -117,12 +120,12 @@ interface WithdrawableItfc
 
 
 // Example implementation
-contract Withdrawable is WithdrawableItfc
+contract Withdrawable is WithdrawableAbstract
 {
     // Withdrawable contracts should have an owner
     address public owner;
 
-    function Withdrawable()
+    constructor()
         public
     {
         owner = msg.sender;
@@ -134,7 +137,7 @@ contract Withdrawable is WithdrawableItfc
         payable
     {
         if (msg.value > 0) {
-            Deposit(msg.sender, msg.value);
+            emit Deposit(msg.sender, msg.value);
         }
     }
     
@@ -144,7 +147,7 @@ contract Withdrawable is WithdrawableItfc
         view
         returns (uint)
     {
-        return _addr == owner ? this.balance : 0;    
+        return _addr == owner ? address(this).balance : 0;    
     }
     
     // Withdraw a value of ether awarded to the caller's address
@@ -154,7 +157,7 @@ contract Withdrawable is WithdrawableItfc
     {
         // Return on false if transfer would have reverted
         if (_value > etherBalanceOf(msg.sender)) return false;
-        Withdrawal(msg.sender, msg.sender, _value);
+        emit Withdrawal(msg.sender, msg.sender, _value);
         msg.sender.transfer(_value);
         return true;
     }
@@ -167,7 +170,7 @@ contract Withdrawable is WithdrawableItfc
         uint value = etherBalanceOf(msg.sender);
         if (value > 0) {
             msg.sender.transfer(value);
-            Withdrawal(msg.sender, msg.sender, value);
+            emit Withdrawal(msg.sender, msg.sender, value);
         }
         return true;
     }
@@ -178,7 +181,7 @@ contract Withdrawable is WithdrawableItfc
         returns (bool)
     {
         if (_value > etherBalanceOf(msg.sender)) return false;
-        Withdrawal(msg.sender, _to, _value);
+        emit Withdrawal(msg.sender, _to, _value);
         _to.transfer(_value);
         return true;
     }
@@ -189,7 +192,7 @@ contract Withdrawable is WithdrawableItfc
         returns (bool)
     {
         for(uint i; i < _addrs.length; i++) {
-            Withdrawal(this, _addrs[i], etherBalanceOf(_addrs[i]));
+            emit Withdrawal(this, _addrs[i], etherBalanceOf(_addrs[i]));
             _addrs[i].transfer(etherBalanceOf(_addrs[i]));
         }
         return true;        
@@ -208,7 +211,7 @@ contract Withdrawable is WithdrawableItfc
             addr = _addrs[i];
             value = _values[i];
             require(etherBalanceOf(addr) >= value);
-            Withdrawal(msg.sender, addr, value);
+            emit Withdrawal(msg.sender, addr, value);
             addr.transfer(value);
         }
         return true;
@@ -220,9 +223,9 @@ contract Withdrawable is WithdrawableItfc
         public
         returns (bool)
     {
-        uint currBal = this.balance;
-        WithdrawableMinItfc(_kAddr).withdrawAll();
-        Deposit(_kAddr, this.balance - currBal);
+        uint currBal = address(this).balance;
+        WithdrawableMinAbstract(_kAddr).withdrawAll();
+        emit Deposit(_kAddr, address(this).balance - currBal);
         return true;
     }
     
@@ -232,9 +235,9 @@ contract Withdrawable is WithdrawableItfc
         public
         returns (bool)
     {
-        uint currBal = this.balance;
-        if(!WithdrawableItfc(_kAddr).withdraw(_value)) return false;
-        Deposit(_kAddr, this.balance - currBal);
+        uint currBal = address(this).balance;
+        if(!WithdrawableAbstract(_kAddr).withdraw(_value)) return false;
+        emit Deposit(_kAddr, address(this).balance - currBal);
         return true;
     }
 }

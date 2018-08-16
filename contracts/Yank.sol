@@ -1,8 +1,8 @@
 /******************************************************************************\
 
 file:   Yank.sol
-ver:    0.4.2
-updated:25-Oct-2017
+ver:    0.4.3
+updated:16-Aug-2018
 author: Darryl Morris (o0ragman0o)
 email:  o0ragman0o AT gmail.com
 
@@ -22,9 +22,8 @@ See MIT Licence for further details.
 
 Change Log
 ----------
-* Using Withdrawlable API 0.4.2
-* Sends any ether that may have accumulated in the contract to the msg.sender
-
+* Using Solidity 0.4.24 syntax
+* 
 \******************************************************************************/
 
 pragma solidity ^0.4.13;
@@ -36,7 +35,7 @@ contract Yank
 //
 // Constants
 //
-	bytes32 public constant VERSION = "Yank v0.4.2";
+	bytes32 public constant VERSION = "Yank v0.4.3";
 
 	// For SandalStraps registration
 	bytes32 public constant regName = "yank";
@@ -68,7 +67,7 @@ contract Yank
     /// calls so need open up for accepting any payments
     function () public payable {
         if (msg.value > 0) {
-            Deposit(msg.sender, msg.value);
+            emit Deposit(msg.sender, msg.value);
         }
     }
     
@@ -90,18 +89,18 @@ contract Yank
             addr = _addrs[i];
             if (addr == 0x0) {
                 pass = Withdrawable(kAddr).withdrawAll();
-                if(pass) WithdrawnAll(kAddr);
+                if(pass) emit WithdrawnAll(kAddr);
             } else {
                arr[0] = addr;
                 pass = Withdrawable(kAddr).withdrawAllFor(arr);
-                if(pass) WithdrawnAllFor(kAddr, addr);
+                if(pass) emit WithdrawnAllFor(kAddr, addr);
             }
-            if (!pass) Failed(kAddr, addr);
+            if (!pass) emit Failed(kAddr, addr);
         }
         // Clear out any accumulated ether to the sender
-        if(this.balance > 0) {
-            Withdrawal(this, msg.sender, this.balance);
-            msg.sender.transfer(this.balance);
+        if(address(this).balance > 0) {
+            emit Withdrawal(this, msg.sender, address(this).balance);
+            msg.sender.transfer(address(this).balance);
         }
         return true;
     }
