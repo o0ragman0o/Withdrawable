@@ -49,7 +49,7 @@ contract WithdrawableMinAbstract
 
     /// @notice withdraw total balance from account `msg.sender`
     /// @return success
-    function withdrawAll() external returns (bool);
+    function withdrawAll() public returns (bool);
 }
 
 // The extended interface of optional API state variables, functions, and events
